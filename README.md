@@ -1,2 +1,12 @@
-# GestionProy-STC
-Proyecto para studie time calendar
+# GestionProy-STC #
+Proyecto UNNOBA
+
+# Configuración de credenciales OAuth #
+
+1. Crear un proyecto en https://console.cloud.google.com/
+2. Ir a "Credenciales" y crear un "ID de cliente de OAuth"
+3. Usar esta URL de redirección: http://localhost:8080/oauth2/callback
+4. Crear un archivo llamado .env en la carpeta backend con:
+
+GOOGLE_CLIENT_ID=client-id
+GOOGLE_CLIENT_SECRET=client-secret
