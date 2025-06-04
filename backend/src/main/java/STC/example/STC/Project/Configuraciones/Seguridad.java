@@ -21,13 +21,16 @@ public class Seguridad {
             .anyRequest().authenticated()
         )
         .oauth2Login(oauth2 -> oauth2
-            .defaultSuccessUrl("/api/user", true)
+            .defaultSuccessUrl("http://localhost:3000/dashboard", true)
+            .failureUrl("/login?error=true")
         )
         .logout(logout -> logout
-            .logoutSuccessHandler(customLogoutSuccessHandler())
             .logoutUrl("/logout")
+            .logoutSuccessHandler(customLogoutSuccessHandler())
+            .logoutSuccessUrl("http://localhost:3000/login")
             .invalidateHttpSession(true)
             .clearAuthentication(true)
+            .permitAll()
         );
 
     return http.build();
