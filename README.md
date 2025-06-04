@@ -10,3 +10,8 @@ Proyecto UNNOBA
 
 GOOGLE_CLIENT_ID=client-id
 GOOGLE_CLIENT_SECRET=client-secret
+
+Nombre ID del proyecto en GoogleCloud: GestionProy-Spring
+Nombre del proyecto, pero en Informacion de la app: GestionProy-STC-Spring
+ID del cliente OAuth: 
+Secret del cliente:

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Container, Row, Col, Button, Card } from 'react-bootstrap';
-import './../Estilos/LoginPage.module.css';
+//import './../Estilos/LoginPage.module.css';
 
 function LoginPage() {
     const handleGoogleLogin = () => {
