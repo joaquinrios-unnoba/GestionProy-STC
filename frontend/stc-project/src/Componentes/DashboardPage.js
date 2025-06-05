@@ -3,8 +3,21 @@ import { Container, Row, Col, Button, Card } from 'react-bootstrap';
 
 function DashboardPage() {
     const handleLogout = () => {
+<<<<<<< HEAD
         // Redirige al endpoint de logout de Spring Security
         window.location.href = 'http://localhost:8080/logout';
+=======
+        // Hacer logout en el backend
+        fetch('http://localhost:8080/logout', {
+            method: 'POST',
+            credentials: 'include',
+        })
+        .then(response => {
+            // Después de cerrar sesión, redirige al login del frontend
+            window.location.href = 'http://localhost:3000/login';
+        })
+        .catch(err => console.error('Error al hacer logout:', err));
+>>>>>>> origin/T002-1/T003-1
     };
 
     return (
@@ -29,4 +42,8 @@ function DashboardPage() {
     );
 }
 
+<<<<<<< HEAD
 export default DashboardPage;
+=======
+export default DashboardPage;
+>>>>>>> origin/T002-1/T003-1
