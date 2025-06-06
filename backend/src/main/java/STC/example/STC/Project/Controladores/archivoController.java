@@ -18,8 +18,7 @@ public class archivoController {
             return ResponseEntity.badRequest().body("Archivo vacío");
         }
 
-        // Logica de lo que se haria en con el archivo recibido (si queremos podemos guardarlo en la BD)
-        
+        // Logica de lo que se haria en con el archivo recibido (si queremos podemos guardarlo en la)
         String nombre = archivo.getOriginalFilename();
         long tamaño = archivo.getSize();
 

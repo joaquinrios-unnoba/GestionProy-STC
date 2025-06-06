@@ -1,4 +1,4 @@
-package STC.example.STC.Project.Configuraciones;
+/*package STC.example.STC.Project.Configuraciones;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -17,7 +17,7 @@ public class Seguridad {
         .cors(withDefaults())
         .csrf(csrf -> csrf.disable())
         .authorizeHttpRequests(auth -> auth
-            .requestMatchers("/", "/login/**", "/error").permitAll()
+            .requestMatchers("/error", "/webjars/**").permitAll() // Rutas públicas para el flujo de login
             .anyRequest().authenticated()
         )
         .oauth2Login(oauth2 -> oauth2
@@ -43,4 +43,4 @@ public class Seguridad {
             response.getWriter().write("Logged out successfully");
         };
     }
-}
+}*/
