@@ -63,6 +63,9 @@ public class GoogleCalendarService {
 
         try (BufferedReader br = new BufferedReader(new InputStreamReader(file.getInputStream()))) {
             String linea;
+            //Aca se saltea la primera linea del csv, porque es la que contiene los titulos
+            br.readLine();
+
             while ((linea = br.readLine()) != null) {
                 String[] partes = linea.split(",");
                 if (partes.length >= 4) {
