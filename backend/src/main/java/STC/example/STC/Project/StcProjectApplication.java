@@ -23,7 +23,9 @@ public class StcProjectApplication {
         System.setProperty("GOOGLE_CLIENT_SECRET", dotenv.get("GOOGLE_CLIENT_SECRET"));
 
 
-        /*GoogleCalendarService googleCalendarService = new GoogleCalendarService();
+        /*
+        PRUEBAS, DESPUES BORRAR, SI NO LO USAN BORREN TAMBIEN LA EXCEPCION (FileNotFoundException)
+        GoogleCalendarService googleCalendarService = new GoogleCalendarService();
 
         File file = new File("backend/src/main/resources/respuesta.csv");
         List<Event> eventos = googleCalendarService.csvToEventList(new FileInputStream(file));

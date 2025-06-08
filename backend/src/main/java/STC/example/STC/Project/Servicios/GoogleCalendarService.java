@@ -86,7 +86,7 @@ public class GoogleCalendarService {
         return eventos;
     }
 
-    //SOBRE CARGA DE METODO PARA PRUEBAS EN EL MAIN---------------------------
+    //------SOBRE CARGA DE METODO PARA PRUEBAS EN EL MAIN, BORRAR O DEJAR PARA HACER PRUEBAS------------
     public List<Event> csvToEventList(InputStream inputStream) {
         List<Event> eventos = new ArrayList<>();
 
