@@ -30,8 +30,6 @@ public class GeminiServicio {
         Map<String, Object> imageData = new HashMap<>();
         imageData.put("mime_type", file.getContentType());
         imageData.put("data", base64Image);
-        System.out.println("Imagen enviada: " + file.getOriginalFilename());
-        System.out.println("Tamaño de la imagen: " + imageBytes.length + " bytes");
 
         Map<String, Object> parts = new HashMap<>();
         parts.put("inline_data", imageData);
@@ -60,8 +58,6 @@ public class GeminiServicio {
                 .build();
         HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
 
-        System.out.println("Respuesta completa de Gemini:");
-        System.out.println(response.body());
         JsonNode root = mapper.readTree(response.body());
         String textoRespuesta = root.path("candidates").get(0)
                 .path("content")
@@ -100,8 +96,6 @@ public class GeminiServicio {
                 .build();
 
         HttpResponse<String> reanalisisResponse = httpClient.send(reanalisisRequest, HttpResponse.BodyHandlers.ofString());
-        System.out.println("Respuesta de reanálisis de Gemini:");
-        System.out.println(reanalisisResponse.body());
 
         JsonNode reanalisisRoot = mapper.readTree(reanalisisResponse.body());
         String textoReanalisis = reanalisisRoot.path("candidates").get(0)
