@@ -16,8 +16,10 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-            .csrf(csrf -> csrf.disable()) // Deshabilitar CSRF para APIs REST
-            .cors(cors -> cors.configurationSource(corsConfigurationSource())) // Habilitar CORS con configuración personalizada
+            // Deshabilitar CSRF para simplificar la configuración
+            .csrf(csrf -> csrf.disable())
+            // Configuración de CORS para permitir solicitudes desde el frontend
+            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/error", "/webjars/**").permitAll() // Rutas públicas necesarias
                 .anyRequest().authenticated() // El resto requiere autenticación
@@ -41,14 +43,19 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
 
-        // Uso de allowedOriginPatterns para mayor flexibilidad (por ej: subdominios)
+        // Uso de allowedOriginPatterns para mayor flexibilidad
         configuration.setAllowedOriginPatterns(List.of("http://localhost:3000"));
 
+        // Permitir todos los métodos HTTP necesarios
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        // Permitir todos los encabezados
         configuration.setAllowedHeaders(List.of("*"));
-        configuration.setAllowCredentials(true); // Permite enviar cookies o autenticación
+        // Permitir credenciales para manejar cookies y autenticación
+        configuration.setAllowCredentials(true);
 
+        // Configurar los encabezados expuestos
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        // Exponer encabezados específicos si es necesario
         source.registerCorsConfiguration("/**", configuration);
 
         return source;
