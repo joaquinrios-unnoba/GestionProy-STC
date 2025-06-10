@@ -3,10 +3,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 @Service
-public class archivoService {
+public class ArchivoService {
     private final GeminiServicio geminiServicio;
 
-    public archivoService(GeminiServicio geminiServicio) {
+    public ArchivoService(GeminiServicio geminiServicio) {
         this.geminiServicio = geminiServicio;
     }
 

@@ -20,8 +20,9 @@ import org.springframework.web.multipart.MultipartFile;
 @Service
 public class GoogleCalendarService {
 
+    // Nombre de la aplicación, se usa para identificar la app en Google Calendar
     private static final String APPLICATION_NAME = "STC-Project";
-    // Con esto parceamos los JSONs que vienen de la API de Google
+    // Con esto parceamos los JSONs que vienen de la API de Google Calendar
     private static final JsonFactory JSON_FACTORY = GsonFactory.getDefaultInstance();
 
     public void crearCalendarioConEventos(String accessToken, List<Event> eventos, String calendarTitle, String timeZone) throws GeneralSecurityException, IOException {
@@ -32,29 +33,29 @@ public class GoogleCalendarService {
         Credential credential = new Credential(BearerToken.authorizationHeaderAccessMethod())
                 .setAccessToken(accessToken);
 
-        //Aca construyo una instancia del Servicio de Google Calendar, para poder trabajar con la cuenta de Google Calendar del usuario. Lo usamos para interactuar con la API
+        // Se construye una instancia del Servicio de Google Calendar, para poder trabajar con la cuenta de Google Calendar del usuario. Se usa para interactuar con la API
         Calendar service = new Calendar.Builder(httpTransport, JSON_FACTORY, credential)
                 .setApplicationName(APPLICATION_NAME) //Etiqueta
                 .build();
 
-        // Creo un nuevo calendario de Google calendar
+        // Se crea un nuevo calendario de Google calendar
         com.google.api.services.calendar.model.Calendar nuevoCalendario = new com.google.api.services.calendar.model.Calendar();
         // Título del calendario
         nuevoCalendario.setSummary(calendarTitle);
         // Zona horaria del calendario
         nuevoCalendario.setTimeZone(timeZone);
 
-        // Con el insert() creo un calendario en el calendar del usuario y le mando el recientemente creado
-        // Con el excute() hago que me devuelva dicho calendario y también ejecuto
+        // Con el insert() se crea un calendario en el calendar del usuario y se manda el recientemente creado
+        // Con el excute() se hace que devuelva dicho calendario y también se ejecuta
         com.google.api.services.calendar.model.Calendar createdCalendar = service.calendars().insert(nuevoCalendario).execute();
 
-        // Inserto cada uno de los eventos extraidos del .csv y los voy agregando al nuevo calendario del usuario recientemente creado, con execute() mando dicha accion al calendar del usuario
+        // Inserta cada uno de los eventos extraidos del .csv y los va agregando al nuevo calendario del usuario recientemente creado, con execute() manda dicha acción al calendario del usuario
         for (Event event : eventos) {
             service.events().insert(createdCalendar.getId(), event).execute();
         }
     }
 
-    // Con este metodo transformo el .csv a una lista de eventos de Calendar para luego pasarlo al Service y crear el calendario
+    // Con este método se transforma el .csv a una lista de eventos para luego pasarlo al Service y crear el calendario
     public List<Event> csvToEventList(MultipartFile file, String timeZone) {
         List<Event> eventos = new ArrayList<>();
 
