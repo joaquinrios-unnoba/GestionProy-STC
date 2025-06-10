@@ -5,6 +5,8 @@ import { Container, Row, Col, Button, Card, Form } from 'react-bootstrap';
 function DashboardPage() {
     const [archivo, setArchivo] = useState(null);
     const [response, setResponse] = useState(null);
+    const [isUploading, setIsUploading] = useState(false);
+    const [isExporting, setIsExporting] = useState(false);
     const [calendarTitle, setCalendarTitle] = useState("");
     const [calendarTitleError, setCalendarTitleError] = useState("");
     const [showModal, setShowModal] = useState(false);
@@ -53,6 +55,7 @@ function DashboardPage() {
 
         const formData = new FormData();
         formData.append("archivo", archivo);
+        setIsUploading(true);
 
         fetch("http://localhost:8080/api/upload", {
             method: "POST",
@@ -67,12 +70,14 @@ function DashboardPage() {
                 if (events.length > 0) {
                     setCsvEvents(events);
                     setShowModal(true);
+                    console.log("Eventos del CSV:", events);
                 }
                 alert("Archivo subido con éxito");
                 setArchivo(null);
                 if (fileInputRef.current) {
                     fileInputRef.current.value = "";
                 }
+                setIsUploading(false);
             } else {
                 alert("Error al subir el archivo");
             }
@@ -110,6 +115,7 @@ function DashboardPage() {
                                     type="file"
                                     onChange={handleFileChange}
                                     ref={fileInputRef}
+                                    disabled={isUploading}
                                 />
                             </Form.Group>
 
@@ -119,8 +125,9 @@ function DashboardPage() {
                                     size="sm"
                                     onClick={handleUpload}
                                     style={{ minWidth: '120px', width: 'auto', height: '44px', fontSize: '1rem', padding: '0.5rem 1.2rem' }}
+                                    disabled={isUploading}
                                 >
-                                    Subir archivo
+                                    {isUploading ? "Subiendo..." : "Subir archivo"}
                                 </Button>
                             </div>
 
@@ -130,6 +137,7 @@ function DashboardPage() {
                                     size="sm"
                                     onClick={handleLogout}
                                     style={{ minWidth: '120px', width: 'auto', height: '44px', fontSize: '1rem', padding: '0.5rem 1.2rem' }}
+                                    disabled={isUploading}
                                 >
                                     Cerrar sesión
                                 </Button>
@@ -238,6 +246,7 @@ function DashboardPage() {
                                         document.body.removeChild(link);
                                         URL.revokeObjectURL(url);
                                     }}
+                                    disabled={isExporting}
                                 >
                                     Descargar CSV
                                 </Button>
@@ -261,6 +270,7 @@ function DashboardPage() {
                                         const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone || "America/Argentina/Buenos_Aires";
                                         formData.append('timeZone', timeZone);
 
+                                        setIsExporting(true);
                                         try {
                                             const res = await fetch('http://localhost:8080/subir-csv', {
                                                 method: 'POST',
@@ -276,17 +286,22 @@ function DashboardPage() {
                                         } catch (err) {
                                             alert('Error al exportar: ' + err);
                                         }
+                                        setIsExporting(false);
                                     }}
+                                    disabled={isExporting || !calendarTitle.trim()}
                                 >
-                                    Exportar a Google Calendar
+                                    {isExporting ? "Exportando..." : "Exportar a Google Calendar"}
                                 </Button>
                             </div>
                             <div>
-                                <Button variant="secondary" onClick={() => {
-                                    setShowModal(false);
-                                    setCalendarTitle("");
-                                    setCalendarTitleError("");
-                                }}>
+                                <Button variant="secondary"
+                                    onClick={() => {
+                                        setShowModal(false);
+                                        setCalendarTitle("");
+                                        setCalendarTitleError("");
+                                    }}
+                                    disabled={isExporting}
+                                >
                                     Cerrar
                                 </Button>
                             </div>

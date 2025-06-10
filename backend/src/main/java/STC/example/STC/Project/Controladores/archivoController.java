@@ -5,15 +5,15 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
-import STC.example.STC.Project.Servicios.archivoService;
+import STC.example.STC.Project.Servicios.ArchivoService;
 
 @RestController
 @RequestMapping("/api")
-public class archivoController {
+public class ArchivoController {
 
-    private final archivoService archivoService;
+    private final ArchivoService archivoService;
 
-    public archivoController(archivoService archivoService) {
+    public ArchivoController(ArchivoService archivoService) {
         this.archivoService = archivoService;
     }
 

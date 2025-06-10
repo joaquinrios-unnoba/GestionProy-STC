@@ -16,22 +16,21 @@ import STC.example.STC.Project.Servicios.GoogleCalendarService;
 @Controller
 public class GoogleCalendarController {
 
-    @Autowired
-    private GoogleCalendarService googleCalendarService;
+    private final GoogleCalendarService googleCalendarService;
+
+    public GoogleCalendarController(@Autowired GoogleCalendarService googleCalendarService) {
+        this.googleCalendarService = googleCalendarService;
+    }
 
     @PostMapping("/subir-csv")
-    public ResponseEntity<String> subirCsv(
-            MultipartFile file,
-            @RequestParam String calendarTitle,
-            @RequestParam String timeZone,
-            @RegisteredOAuth2AuthorizedClient("google") OAuth2AuthorizedClient authorizedClient) throws GeneralSecurityException, IOException {
+    public ResponseEntity<String> subirCsv(MultipartFile file, @RequestParam String calendarTitle, @RequestParam String timeZone, @RegisteredOAuth2AuthorizedClient("google") OAuth2AuthorizedClient authorizedClient) throws GeneralSecurityException, IOException {
 
-        //Obtengo el token del usuario PARA PODER ACCEDER A SU GOOGLE CALENDAR
+        // Obtiene el token del usuario para poder acceder a su Google Calendar
         String accessToken = authorizedClient.getAccessToken().getTokenValue();
 
-        //Convierto el CSV a lista de eventos
+        // Convierte el CSV a lista de eventos
         List<Event> eventos = googleCalendarService.csvToEventList(file,timeZone);
-        //Se crea el nuevo calendario
+        // Se crea el nuevo calendario
         googleCalendarService.crearCalendarioConEventos(accessToken, eventos, calendarTitle, timeZone);
 
         return ResponseEntity.ok("Calendario creado exitosamente.");

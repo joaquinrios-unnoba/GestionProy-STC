@@ -7,7 +7,7 @@ function LoginPage() {
         document.title = "Login - STC";
     }, []);
 
-        const handleGoogleLogin = () => {
+    const handleGoogleLogin = () => {
         // Redirige al endpoint de Spring Security que inicia el flujo de OAuth2 de Google
         window.location.href = 'http://localhost:8080/oauth2/authorization/google';
     };

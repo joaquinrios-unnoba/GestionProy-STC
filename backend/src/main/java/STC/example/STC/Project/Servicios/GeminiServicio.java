@@ -10,6 +10,7 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.Base64;
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -18,14 +19,18 @@ import java.util.regex.Pattern;
 @Service
 public class GeminiServicio {
 
+    // Clave de API de Gemini, se inyecta desde el archivo de propiedades
+    // Se recupera usando la clase main de la aplicación para cargar las variables de entorno
     @Value("${gemini.api.key}")
     private String geminiApiKey;
 
+    // Cliente HTTP para realizar solicitudes a la API de Gemini
     private final HttpClient httpClient = HttpClient.newHttpClient();
 
-    // Este método envía una imagen a la API de Gemini y retorna el resultado en formato CSV.
+    // Este método envía una imagen a la API de Gemini y retorna el resultado en formato CSV
     public String enviarImagenRetornarResultado(MultipartFile file) throws Exception {
         // Primer envío de la imagen a Gemini para generar el CSV
+
         // Se convierte la imagen a Base64 y se prepara el cuerpo de la solicitud
         byte[] imageBytes = file.getBytes();
         String base64Image = Base64.getEncoder().encodeToString(imageBytes);
@@ -33,6 +38,8 @@ public class GeminiServicio {
         Map<String, Object> imageData = new HashMap<>();
         imageData.put("mime_type", file.getContentType());
         imageData.put("data", base64Image);
+
+        Calendar calendar = Calendar.getInstance();
 
         Map<String, Object> parts = new HashMap<>();
         parts.put("inline_data", imageData);
@@ -43,10 +50,10 @@ public class GeminiServicio {
             Map.of("text",
             "Convierte el cronograma académico proporcionado a un formato CSV para importar a Google Calendar. Cada fila del CSV debe representar una actividad o clase distinta, con las siguientes columnas:\n" +
             "\n" +
-            "* Subject: Título breve para la clase o actividad, identificando con un prefijo 'Clase:' o 'Actividad:' según corresponda.\n" +
-            "* Description: Información detallada sobre la clase o actividad, en cuanto a lo que se va a hacer o cómo será.\n" +
-            "* Start Date: La fecha y hora de inicio, debe tener el formato ISO 8601 que usa 'YYYY-MM-DDTHH:MM:SS'. Si no dice hora coloca 00:00:00. Asume que el año es el actual si no se indica.\n" +
-            "* End Date: La fecha y hora de fin, debe tener el formato ISO 8601 que usa 'YYYY-MM-DDTHH:MM:SS'. Si no dice hora coloca 23:59:59. Asume que el año es el actual si no se indica.\n"
+            "* Subject: Título breve para la clase o actividad.\n" +
+            "* Description: Información detallada sobre la clase o actividad, en cuanto a lo que se va a hacer o cómo será.\n" +  
+            "* Start Date: La fecha y hora de inicio solo acepta formato OBLIGATORIO 'YYYY-MM-DDTHH:MM:SS'. Si no dice hora coloca ESTRICTAMENTE 00:00:00 sin suponer hora. El año es " + calendar.get(Calendar.YEAR) + " si no se indica lo contrario.\n" +
+            "* End Date: La fecha y hora de fin solo acepta formato OBLIGATORIO 'YYYY-MM-DDTHH:MM:SS'. Si no dice hora coloca ESTRICTAMENTE 23:59:59 sin suponer hora. El año es " + calendar.get(Calendar.YEAR) + " si no se indica lo contrario.\n"
             )
             })
         });
@@ -69,19 +76,17 @@ public class GeminiServicio {
         String csvExtraido = extraerCsv(textoRespuesta);
 
         // Segundo envío para reanalizar la imagen y el CSV extraído
+
         // Se envía el CSV extraído junto con la imagen para corregir errores de formato y duplicados
         Map<String, Object> csvParts = new HashMap<>();
         csvParts.put("text",
-            "Este es el texto de la instrucción original para el CSV:\n" +
+            "Empleando la imágen proporcionada y el CSV extraído, corrige los siguientes errores:\n" +
+            "* Asegúrate que Start Date y End Date tengan el formato OBLIGATORIO 'YYYY-MM-DDTHH:MM:SS'.\n" +
+            "* Si no se indica hora en Start Date, inserta ESTRICTAMENTE 00:00:00. Si no se indica hora en End Date, inserta ESTRICTAMENTE 23:59:59.\n" +
+            "* El año es " + calendar.get(Calendar.YEAR) + " si no se indica lo contrario.\n" +
+            "* Elimina las filas duplicadas en el CSV unificando las actividades o clases si es posible.\n" +
             "\n" +
-            "Convierte el cronograma académico proporcionado a un formato CSV para importar a Google Calendar. Cada fila del CSV debe representar una actividad o clase distinta, con las siguientes columnas:\n" +
-            "\n" +
-            "* Subject: Título breve para la clase o actividad, identificando con un prefijo 'Clase:' o 'Actividad:' según corresponda.\n" +
-            "* Description: Información detallada sobre la clase o actividad, en cuanto a lo que se va a hacer o cómo será.\n" +
-            "* Start Date: La fecha y hora de inicio, debe tener el formato ISO 8601 que usa 'YYYY-MM-DDTHH:MM:SS'. Si no dice hora coloca 00:00:00. Asume que el año es el actual si no se indica en el cronograma.\n" +
-            "* End Date: La fecha y hora de fin, debe tener el formato ISO 8601 que usa 'YYYY-MM-DDTHH:MM:SS'. Si no dice hora coloca 23:59:59. Asume que el año es el actual si no se indica en el cronograma.\n" +
-            "\n" +
-            "Este es el CSV generado previamente. Por favor, reanaliza la imagen y el CSV para corregir errores en formatos y duplicados. Devuelve únicamente el CSV corregido en formato CSV, sin explicaciones ni comentarios.\n\n" +
+            "El CSV extraído es:\n" +
             csvExtraido
         );
 
@@ -110,7 +115,9 @@ public class GeminiServicio {
                 .path("text").asText();
         csvExtraido = extraerCsv(textoReanalisis);
 
+        // ¡IMPORTANTE!
         // Borrar la descarga al escritorio antes de hacer merge a main
+        // ¡IMPORTANTE!
         String desktopPath = System.getProperty("user.home") + "/Desktop/respuesta.csv";
         try (FileWriter writer = new FileWriter(desktopPath)) {
             writer.write(csvExtraido);
@@ -120,7 +127,7 @@ public class GeminiServicio {
     }
 
     // Este método extrae el contenido del CSV del texto completo, buscando el bloque delimitado por ```csv
-    // Si no encuentra el bloque, devuelve el texto completo.
+    // Si no encuentra el bloque, devuelve el texto completo
     private String extraerCsv(String textoCompleto) {
         Pattern pattern = Pattern.compile("```csv\\s*(.*?)\\s*```", Pattern.DOTALL);
         Matcher matcher = pattern.matcher(textoCompleto);
