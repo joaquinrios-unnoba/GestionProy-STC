@@ -5,20 +5,29 @@ import { Container, Row, Col, Button, Card, Form } from 'react-bootstrap';
 function DashboardPage() {
     const [archivo, setArchivo] = useState(null);
     const [csvGenerado, setCsvGenerado] = useState(null);
+    const [isAuthenticated, setIsAuthenticated] = useState(false);
     const fileInputRef = useRef(null);
     const navigate = useNavigate();
 
+    // Verifica autenticación
     useEffect(() => {
         fetch('http://localhost:8080/api/user', {
             method: 'GET',
             credentials: 'include',
         })
         .then((response) => {
-            if (!response.ok) {
+            if (response.ok) {
+                setIsAuthenticated(true);
+            } else {
+                setIsAuthenticated(false);
                 navigate('/login');
             }
         })
-        .catch(() => navigate('/login'));
+        .catch((err) => {
+            console.error("Error al verificar autenticación:", err);
+            setIsAuthenticated(false);
+            navigate('/login');
+        });
     }, [navigate]);
 
     const handleLogout = () => {
@@ -27,7 +36,6 @@ function DashboardPage() {
 
     const handleFileChange = (e) => {
         setArchivo(e.target.files[0]);
-        setCsvGenerado(null); // Reinicia si seleccionás nuevo archivo
     };
 
     const handleUpload = () => {
@@ -44,52 +52,51 @@ function DashboardPage() {
             body: formData,
             credentials: "include",
         })
-        .then(res => res.text())
+        .then(res => res.ok ? res.text() : Promise.reject("Error al procesar archivo"))
         .then(csv => {
             setCsvGenerado(csv);
-            alert("Archivo procesado con éxito.");
         })
         .catch(err => {
             console.error("Error:", err);
-            alert("Error al procesar el archivo.");
+            alert("Error al subir o procesar el archivo.");
         });
     };
 
-    const handleDescargarCSV = () => {
-        const blob = new Blob([csvGenerado], { type: 'text/csv' });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = 'respuesta.csv';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+    const descargarCSV = () => {
+        const blob = new Blob([csvGenerado], { type: "text/csv" });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "resultado.csv";
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
     };
 
-    const handleEnviarCSV = () => {
-        const blob = new Blob([csvGenerado], { type: 'text/csv' });
-        const file = new File([blob], "respuesta.csv", { type: "text/csv" });
-
-        const formData = new FormData();
-        formData.append("file", file);
-
+    const enviarCSVAGoogle = (csv) => {
         fetch("http://localhost:8080/subir-csv", {
             method: "POST",
-            body: formData,
-            credentials: "include"
+            headers: {
+                "Content-Type": "text/csv"
+            },
+            body: csv,
+            credentials: "include",
         })
         .then(res => {
             if (res.ok) {
-                alert("CSV enviado al calendario con éxito.");
+                alert("CSV enviado a Google Calendar correctamente.");
             } else {
-                alert("Error al enviar CSV al calendario.");
+                alert("Error al enviar el CSV a Google Calendar.");
             }
         })
         .catch(err => {
-            console.error("Error:", err);
-            alert("Error de conexión al enviar CSV.");
+            console.error("Error al enviar a Google:", err);
+            alert("Fallo la exportación a Google Calendar.");
         });
     };
+
+    if (!isAuthenticated) return null;
 
     return (
         <Container className="mt-5">
@@ -114,36 +121,30 @@ function DashboardPage() {
                                     variant="primary"
                                     size="sm"
                                     onClick={handleUpload}
-                                    style={{ minWidth: '120px', height: '44px' }}
+                                    style={{ minWidth: '120px', width: 'auto', height: '44px', fontSize: '1rem', padding: '0.5rem 1.2rem' }}
                                 >
                                     Subir archivo
                                 </Button>
                             </div>
 
                             {csvGenerado && (
-                                <>
-                                    <div className="d-flex flex-column align-items-center mt-4">
-                                        <Button
-                                            variant="success"
-                                            size="sm"
-                                            onClick={handleDescargarCSV}
-                                            style={{ minWidth: '120px', height: '44px' }}
-                                        >
-                                            Descargar CSV
-                                        </Button>
-                                    </div>
-
-                                    <div className="d-flex flex-column align-items-center mt-2">
-                                        <Button
-                                            variant="info"
-                                            size="sm"
-                                            onClick={handleEnviarCSV}
-                                            style={{ minWidth: '120px', height: '44px' }}
-                                        >
-                                            Enviar a Google Calendar
-                                        </Button>
-                                    </div>
-                                </>
+                                <div className="d-flex flex-column align-items-center mt-4">
+                                    <Button
+                                        variant="success"
+                                        size="sm"
+                                        onClick={descargarCSV}
+                                        style={{ marginBottom: '10px' }}
+                                    >
+                                        Descargar CSV
+                                    </Button>
+                                    <Button
+                                        variant="info"
+                                        size="sm"
+                                        onClick={() => enviarCSVAGoogle(csvGenerado)}
+                                    >
+                                        Exportar a Google Calendar
+                                    </Button>
+                                </div>
                             )}
 
                             <div className="d-flex flex-column align-items-center mt-4">
@@ -151,7 +152,7 @@ function DashboardPage() {
                                     variant="danger"
                                     size="sm"
                                     onClick={handleLogout}
-                                    style={{ minWidth: '120px', height: '44px' }}
+                                    style={{ minWidth: '120px', width: 'auto', height: '44px', fontSize: '1rem', padding: '0.5rem 1.2rem' }}
                                 >
                                     Cerrar sesión
                                 </Button>
