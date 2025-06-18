@@ -40,6 +40,9 @@ public class GoogleCalendarController {
     @PostMapping("/subir-csv")
     public ResponseEntity<String> subirCsv(@RequestParam("file") MultipartFile file,
                                            OAuth2AuthenticationToken authentication) throws GeneralSecurityException, IOException {
+
+        System.out.println("Nombre del archivo recibido: " + file.getOriginalFilename());
+                                    
         //Obtengo el accessToken del usuario
         OAuth2AuthorizedClient authorizedClient = authorizedClientService
                 .loadAuthorizedClient(

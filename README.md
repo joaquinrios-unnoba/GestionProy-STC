@@ -11,7 +11,11 @@ Proyecto UNNOBA
 GOOGLE_CLIENT_ID=client-id
 GOOGLE_CLIENT_SECRET=client-secret
 
-Nombre ID del proyecto en GoogleCloud: GestionProy-Spring
-Nombre del proyecto, pero en Informacion de la app: GestionProy-STC-Spring
-ID del cliente OAuth: 
-Secret del cliente:
+# Configuración de credenciales Gemini #
+
+1. Abrir el proyecto en https://console.cloud.google.com/
+2. Ir a "Credenciales" y crear una "Clave de API"
+3. Usar esta restricción: Generative Language API
+4. Abrir el archivo llamado .env en la carpeta backend y añadir:
+
+GEMINI_API_KEY=api-key
