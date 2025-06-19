@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Container, Row, Col, Button, Card, Form } from 'react-bootstrap';
+import background from '../Recursos/background.jpg';
 
 function DashboardPage() {
     const [archivo, setArchivo] = useState(null);
@@ -101,7 +102,18 @@ function DashboardPage() {
     }
 
     return (
-        <Container className="mt-5">
+        <Container
+            fluid
+            style={{
+                height: "100vh",
+                backgroundImage: `url(${background})`,
+                backgroundSize: "cover",
+                backgroundPosition: "center",
+                backgroundRepeat: "no-repeat",
+                paddingTop: "4rem",
+                paddingBottom: "4rem"
+            }}
+        >
             <Row>
                 <Col>
                     <Card className="shadow-lg p-4">
@@ -110,7 +122,11 @@ function DashboardPage() {
                             <p className="text-center">¡Has iniciado sesión correctamente con Google!</p>
 
                             <Form.Group controlId="formFile" className="mb-3">
-                                <Form.Label>Seleccioná un archivo (PDF o imágen)</Form.Label>
+                                <Form.Label>
+                                    Seleccioná un archivo (PDF o imágen)
+                                    <br />
+                                    Debe contener eventos que indiquen título, descripción, fecha y hora de inicio y fin.
+                                </Form.Label>
                                 <Form.Control
                                     type="file"
                                     onChange={handleFileChange}

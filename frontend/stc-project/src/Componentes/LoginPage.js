@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { Container, Row, Col, Button, Card } from 'react-bootstrap';
-import '../Estilos/LoginPage.module.css';
+import background from '../Recursos/background.jpg';
 
 function LoginPage() {
     useEffect(() => {
@@ -13,7 +13,17 @@ function LoginPage() {
     };
 
     return (
-        <Container className="login-container d-flex justify-content-center align-items-center" style={{ minHeight: "100vh" }}>
+        <Container
+            fluid
+            className="login-container d-flex justify-content-center align-items-center"
+            style={{
+                minHeight: "100vh",
+                backgroundImage: `url(${background})`,
+                backgroundSize: "cover",
+                backgroundPosition: "center",
+                backgroundRepeat: "no-repeat"
+            }}
+        >
             <Row className="w-100 justify-content-center">
                 <Col md={8} lg={6} xl={5}>
                     <Card className="login-card shadow-lg p-4">
