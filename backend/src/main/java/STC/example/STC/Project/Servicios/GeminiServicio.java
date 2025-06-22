@@ -18,14 +18,23 @@ import java.util.regex.Pattern;
 
 @Service
 public class GeminiServicio {
-
     // Clave de API de Gemini, se inyecta desde el archivo de propiedades
     // Se recupera usando la clase main de la aplicación para cargar las variables de entorno
     @Value("${gemini.api.key}")
     private String geminiApiKey;
 
     // Cliente HTTP para realizar solicitudes a la API de Gemini
-    private final HttpClient httpClient = HttpClient.newHttpClient();
+    private final HttpClient httpClient;
+
+    public GeminiServicio() {
+        // Se crea un cliente HTTP que se usará para enviar solicitudes a la API de Gemini
+        this.httpClient = HttpClient.newHttpClient();
+    }
+
+    public GeminiServicio(HttpClient httpClient) {
+        // Constructor que permite inyectar un cliente HTTP personalizado, útil para pruebas
+        this.httpClient = httpClient;
+    }
 
     // Este método envía una imagen a la API de Gemini y retorna el resultado en formato CSV
     public String enviarImagenRetornarResultado(MultipartFile file) throws Exception {

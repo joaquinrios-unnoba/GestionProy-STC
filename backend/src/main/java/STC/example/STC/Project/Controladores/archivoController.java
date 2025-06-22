@@ -10,7 +10,6 @@ import STC.example.STC.Project.Servicios.ArchivoService;
 @RestController
 @RequestMapping("/api")
 public class ArchivoController {
-
     private final ArchivoService archivoService;
 
     public ArchivoController(ArchivoService archivoService) {
@@ -20,7 +19,7 @@ public class ArchivoController {
     @PostMapping("/upload")
     public ResponseEntity<String> subirArchivo(@RequestParam MultipartFile archivo) throws Exception {
         if (archivo.isEmpty()) {
-            return ResponseEntity.badRequest().body("Archivo vacío");
+            return ResponseEntity.badRequest().body("Archivo vacío.");
         }
 
         String archivoNuevo = archivoService.procesarArchivo(archivo);

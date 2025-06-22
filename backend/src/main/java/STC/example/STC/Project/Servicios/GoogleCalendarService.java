@@ -19,7 +19,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 @Service
 public class GoogleCalendarService {
-
     // Nombre de la aplicación, se usa para identificar la app en Google Calendar
     private static final String APPLICATION_NAME = "STC-Project";
     // Con esto parceamos los JSONs que vienen de la API de Google Calendar
@@ -92,7 +91,7 @@ public class GoogleCalendarService {
 
                     if (endStr.length() == 10) {
                         java.time.LocalDate endDate = java.time.LocalDate.parse(endStr);
-                        endZoned = endDate.atStartOfDay(zoneId);
+                        endZoned = endDate.atTime(23, 59, 59).atZone(zoneId);
                     } else {
                         java.time.LocalDateTime endDateTime = java.time.LocalDateTime.parse(endStr, dateTimeFormatter);
                         endZoned = endDateTime.atZone(zoneId);

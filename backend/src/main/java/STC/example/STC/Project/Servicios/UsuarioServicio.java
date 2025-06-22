@@ -6,7 +6,6 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class UsuarioServicio {
-
     public Map<String, Object> obtenerDatosUsuario(OAuth2User principal) {
         if (principal == null) {
             throw new IllegalArgumentException("El usuario no está autenticado");
