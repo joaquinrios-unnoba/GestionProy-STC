@@ -4,14 +4,14 @@ import org.springframework.web.multipart.MultipartFile;
 
 @Service
 public class ArchivoService {
-    private final GeminiServicio geminiServicio;
+    private final IAServicio iaServicio;
 
-    public ArchivoService(GeminiServicio geminiServicio) {
-        this.geminiServicio = geminiServicio;
+    public ArchivoService(IAServicio iaServicio) {
+        this.iaServicio = iaServicio;
     }
 
     public String procesarArchivo(MultipartFile file) throws Exception {
-        return geminiServicio.enviarImagenRetornarResultado(file);
+        return iaServicio.enviarImagenRetornarResultado(file);
     }
 
 }

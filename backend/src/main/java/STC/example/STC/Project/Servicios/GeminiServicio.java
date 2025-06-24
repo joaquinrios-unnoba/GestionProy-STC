@@ -2,6 +2,7 @@ package STC.example.STC.Project.Servicios;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import java.io.FileWriter;
@@ -16,8 +17,9 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+@Primary
 @Service
-public class GeminiServicio {
+public class GeminiServicio implements IAServicio {
     // Clave de API de Gemini, se inyecta desde el archivo de propiedades
     // Se recupera usando la clase main de la aplicación para cargar las variables de entorno
     @Value("${gemini.api.key}")

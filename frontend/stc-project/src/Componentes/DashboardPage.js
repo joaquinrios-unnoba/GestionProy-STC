@@ -1,13 +1,18 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Container, Row, Col, Button, Card, Form } from 'react-bootstrap';
+import { Container, Row, Col, Toast, Button, Card, Form } from 'react-bootstrap';
 import background from '../Recursos/background.jpg';
 
 function DashboardPage() {
     const [archivo, setArchivo] = useState(null);
     const [response, setResponse] = useState(null);
+    const [errorMessage, setErrorMessage] = useState("");
+    const [showToastError, setShowToastError] = useState(false);
+    const [showToastLogin, setShowToastLogin] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
+    const [uploadSuccess, setUploadSuccess] = useState(false);
     const [isExporting, setIsExporting] = useState(false);
+    const [exportSuccess, setExportSuccess] = useState(false);
     const [calendarTitle, setCalendarTitle] = useState("");
     const [calendarTitleError, setCalendarTitleError] = useState("");
     const [showModal, setShowModal] = useState(false);
@@ -27,6 +32,10 @@ function DashboardPage() {
         .then((response) => {
             if (response.ok) {
                 setIsAuthenticated(true);
+                if (!sessionStorage.getItem('toastShown')) {
+                    setShowToastLogin(true);
+                    sessionStorage.setItem('toastShown', 'true');
+                }
             } else {
                 setIsAuthenticated(false);
                 navigate('/login');
@@ -40,6 +49,7 @@ function DashboardPage() {
     }, [navigate]);
 
     const handleLogout = () => {
+        sessionStorage.removeItem('toastShown');
         // Redirigir al endpoint de logout de Spring Security
         window.location.href = "http://localhost:8080/logout";
     };
@@ -50,7 +60,8 @@ function DashboardPage() {
 
     const handleUpload = () => {
         if (!archivo) {
-            alert("Por favor, seleccioná un archivo");
+            setErrorMessage("Por favor, seleccioná un archivo.");
+            setShowToastError(true);
             return;
         }
 
@@ -73,21 +84,22 @@ function DashboardPage() {
                     setShowModal(true);
                     console.log("Eventos del CSV:", events);
                 }
-                alert("Archivo subido con éxito");
+                setUploadSuccess(true);
                 setArchivo(null);
                 if (fileInputRef.current) {
                     fileInputRef.current.value = "";
                 }
                 setIsUploading(false);
             } else {
-                alert("Error al subir el archivo");
+                setErrorMessage("Error al subir el archivo.");
+                setShowToastError(true);
             }
         })
         .catch(err => console.error("Error:", err));
     };
 
     function parseCsv(text) {
-        // El backend devuelve el CSV envuelto en ```csv ... ```
+        // El backend devuelve el CSV envuelto en ```csv ...```
         const csvMatch = text.match(/```csv\s*([\s\S]*?)\s*```/i);
         const csvText = csvMatch ? csvMatch[1].trim() : text.trim();
         const lines = csvText.split('\n').filter(Boolean);
@@ -119,13 +131,93 @@ function DashboardPage() {
                     <Card className="shadow-lg p-4">
                         <Card.Body>
                             <h2 className="text-center mb-4">Dashboard</h2>
-                            <p className="text-center">¡Has iniciado sesión correctamente con Google!</p>
+
+                            <Toast
+                                bg="success"
+                                show={showToastLogin}
+                                onClose={() => setShowToastLogin(false)}
+                                delay={10000}
+                                autohide
+                                style={{
+                                    position: 'absolute',
+                                    top: -20,
+                                    right: 20,
+                                    minWidth: '350px',
+                                    fontSize: '1rem',
+                                    padding: '1rem 1.5rem',
+                                    zIndex: 9999
+                                }}
+                            >
+                                <Toast.Body className="text-white text-center">
+                                    ¡Has iniciado sesión correctamente con Google!
+                                </Toast.Body>
+                            </Toast>
+                            <Toast
+                                bg="success"
+                                show={uploadSuccess}
+                                onClose={() => setUploadSuccess(false)}
+                                delay={10000}
+                                autohide
+                                style={{
+                                    position: 'absolute',
+                                    top: -20,
+                                    right: 20,
+                                    minWidth: '350px',
+                                    fontSize: '1rem',
+                                    padding: '1rem 1.5rem',
+                                    zIndex: 9999,
+                                }}
+                            >
+                                <Toast.Body className="text-white text-center">
+                                    Archivo subido exitosamente.
+                                </Toast.Body>
+                            </Toast>
+                            <Toast
+                                bg="success"
+                                show={exportSuccess}
+                                onClose={() => setExportSuccess(false)}
+                                delay={10000}
+                                autohide
+                                style={{
+                                    position: 'absolute',
+                                    top: -20,
+                                    right: 20,
+                                    minWidth: '350px',
+                                    fontSize: '1rem',
+                                    padding: '1rem 1.5rem',
+                                    zIndex: 9999,
+                                }}
+                            >
+                                <Toast.Body className="text-white text-center">
+                                    Calendario exportado exitosamente.
+                                </Toast.Body>
+                            </Toast>
+                            <Toast
+                                bg="danger"
+                                show={showToastError}
+                                onClose={() => setShowToastError(false)}
+                                delay={10000}
+                                autohide
+                                style={{
+                                    position: 'absolute',
+                                    top: -20,
+                                    right: 20,
+                                    minWidth: '350px',
+                                    fontSize: '1rem',
+                                    padding: '1rem 1.5rem',
+                                    zIndex: 9999,
+                                }}
+                            >
+                                <Toast.Body className="text-white text-center">
+                                    {errorMessage || "Error."}
+                                </Toast.Body>
+                            </Toast>
 
                             <Form.Group controlId="formFile" className="mb-3">
                                 <Form.Label>
-                                    Seleccioná un archivo (PDF o imágen)
+                                    Seleccioná un archivo (PDF o imágen).
                                     <br />
-                                    Debe contener eventos que indiquen título, descripción, fecha y hora de inicio y fin.
+                                    El archivo debe contener en lo posible eventos que indiquen título, descripción, fecha y hora de inicio y fin.
                                 </Form.Label>
                                 <Form.Control
                                     type="file"
@@ -143,7 +235,14 @@ function DashboardPage() {
                                     style={{ minWidth: '120px', width: 'auto', height: '44px', fontSize: '1rem', padding: '0.5rem 1.2rem' }}
                                     disabled={isUploading}
                                 >
-                                    {isUploading ? "Subiendo..." : "Subir archivo"}
+                                    {isUploading ? (
+                                        <>
+                                            <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                            Subiendo...
+                                        </>
+                                    ) : (
+                                        "Subir archivo"
+                                    )}
                                 </Button>
                             </div>
 
@@ -169,7 +268,7 @@ function DashboardPage() {
                     position: 'fixed',
                     top: 0, left: 0, right: 0, bottom: 0,
                     background: 'rgba(0,0,0,0.5)',
-                    zIndex: 9999,
+                    zIndex: 9998,
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center'
@@ -294,19 +393,28 @@ function DashboardPage() {
                                                 credentials: 'include'
                                             });
                                             if (res.ok) {
-                                                alert('Calendario exportado exitosamente a Google Calendar');
+                                                setExportSuccess(true);
                                             } else {
                                                 const text = await res.text();
-                                                alert('Error al exportar: ' + text);
+                                                setErrorMessage(`Error al exportar: ${text}`);
+                                                setShowToastError(true);
                                             }
                                         } catch (err) {
-                                            alert('Error al exportar: ' + err);
+                                            setErrorMessage("Error al exportar: " + err.message);
+                                            setShowToastError(true);
                                         }
                                         setIsExporting(false);
                                     }}
                                     disabled={isExporting || !calendarTitle.trim()}
                                 >
-                                    {isExporting ? "Exportando..." : "Exportar a Google Calendar"}
+                                    {isExporting ? (
+                                        <>
+                                            <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                            Exportando...
+                                        </>
+                                    ) : (
+                                        "Exportar a Google Calendar"
+                                    )}
                                 </Button>
                             </div>
                             <div>
