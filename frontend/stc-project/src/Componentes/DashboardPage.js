@@ -20,6 +20,12 @@ function DashboardPage() {
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const fileInputRef = useRef(null);
     const navigate = useNavigate();
+    const allowedTypes = [
+        "application/pdf",
+        "image/jpeg",
+        "image/jpg",
+        "image/png"
+    ];
 
     useEffect(() => {
         document.title = "Dashboard - STC";
@@ -65,6 +71,14 @@ function DashboardPage() {
             return;
         }
 
+        if (archivo) {
+            if (!allowedTypes.includes(archivo.type)) {
+                setErrorMessage("Tipo de archivo no permitido, debe ser PDF o imágen JPEG, JPG o PNG.");
+                setShowToastError(true);
+                return;
+            }
+        }
+
         const formData = new FormData();
         formData.append("archivo", archivo);
         setIsUploading(true);
@@ -82,7 +96,6 @@ function DashboardPage() {
                 if (events.length > 0) {
                     setCsvEvents(events);
                     setShowModal(true);
-                    console.log("Eventos del CSV:", events);
                 }
                 setUploadSuccess(true);
                 setArchivo(null);
@@ -93,6 +106,7 @@ function DashboardPage() {
             } else {
                 setErrorMessage("Error al subir el archivo.");
                 setShowToastError(true);
+                setIsUploading(false);
             }
         })
         .catch(err => console.error("Error:", err));
@@ -215,7 +229,7 @@ function DashboardPage() {
 
                             <Form.Group controlId="formFile" className="mb-3">
                                 <Form.Label>
-                                    Seleccioná un archivo (PDF o imágen).
+                                    Seleccioná un archivo de tipo PDF o imágen JPEG, JPG o PNG.
                                     <br />
                                     El archivo debe contener en lo posible eventos que indiquen título, descripción, fecha y hora de inicio y fin.
                                 </Form.Label>
@@ -400,7 +414,7 @@ function DashboardPage() {
                                                 setShowToastError(true);
                                             }
                                         } catch (err) {
-                                            setErrorMessage("Error al exportar: " + err.message);
+                                            setErrorMessage("Error al exportar.");
                                             setShowToastError(true);
                                         }
                                         setIsExporting(false);

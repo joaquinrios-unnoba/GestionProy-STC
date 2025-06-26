@@ -1,21 +1,21 @@
 package STC.example.STC.Project.Servicios;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Primary;
-import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
 import java.io.FileWriter;
-import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.net.URI;
 import java.util.Base64;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Primary;
+import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 @Primary
 @Service
@@ -24,6 +24,8 @@ public class GeminiServicio implements IAServicio {
     // Se recupera usando la clase main de la aplicación para cargar las variables de entorno
     @Value("${gemini.api.key}")
     private String geminiApiKey;
+
+    private static final String URL_GEMINI = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent";
 
     // Cliente HTTP para realizar solicitudes a la API de Gemini
     private final HttpClient httpClient;
@@ -41,6 +43,9 @@ public class GeminiServicio implements IAServicio {
     // Este método envía una imagen a la API de Gemini y retorna el resultado en formato CSV
     public String enviarImagenRetornarResultado(MultipartFile file) throws Exception {
         // Primer envío de la imagen a Gemini para generar el CSV
+        
+        String tipoArchivo = file.getContentType();
+        boolean esPDF = tipoArchivo != null && tipoArchivo.equals("application/pdf");
 
         // Se convierte la imagen a Base64 y se prepara el cuerpo de la solicitud
         byte[] imageBytes = file.getBytes();
@@ -52,20 +57,30 @@ public class GeminiServicio implements IAServicio {
 
         Calendar calendar = Calendar.getInstance();
 
+        String prompt;
+        if (esPDF) {
+            prompt = "Convierte el cronograma académico del archivo PDF proporcionado a un formato CSV para importar a Google Calendar. " +
+                    "El archivo puede tener varias páginas. Cada fila del CSV debe representar una actividad o clase distinta, con las siguientes columnas:\n\n" +
+                    "* Subject: Título breve para la clase o actividad.\n" +
+                    "* Description: Información detallada sobre la clase o actividad.\n" +
+                    "* Start Date: Formato OBLIGATORIO 'YYYY-MM-DDTHH:MM:SS'. Si no dice hora, aunque diga tiempo estimado, coloca ESTRICTAMENTE 00:00:00. El año es " + calendar.get(Calendar.YEAR) + " si no se indica lo contrario.\n" +
+                    "* End Date: Formato OBLIGATORIO 'YYYY-MM-DDTHH:MM:SS'. Si no dice hora, aunque diga tiempo estimado, coloca ESTRICTAMENTE 23:59:59.\n";
+        } else {
+            prompt = "Convierte el cronograma académico de la imagen proporcionada a un formato CSV para importar a Google Calendar. " +
+                    "Cada fila del CSV debe representar una actividad o clase distinta, con las siguientes columnas:\n\n" +
+                    "* Subject: Título breve para la clase o actividad.\n" +
+                    "* Description: Información detallada sobre la clase o actividad.\n" +
+                    "* Start Date: Formato OBLIGATORIO 'YYYY-MM-DDTHH:MM:SS'. Si no dice hora, aunque diga tiempo estimado, coloca ESTRICTAMENTE 00:00:00. El año es " + calendar.get(Calendar.YEAR) + " si no se indica lo contrario.\n" +
+                    "* End Date: Formato OBLIGATORIO 'YYYY-MM-DDTHH:MM:SS'. Si no dice hora, aunque diga tiempo estimado, coloca ESTRICTAMENTE 23:59:59.\n";
+        }
+
         Map<String, Object> parts = new HashMap<>();
         parts.put("inline_data", imageData);
         Map<String, Object> requestBody = new HashMap<>();
         requestBody.put("contents", new Object[] {
             Map.of("parts", new Object[] {
-            parts,
-            Map.of("text",
-            "Convierte el cronograma académico proporcionado a un formato CSV para importar a Google Calendar. Cada fila del CSV debe representar una actividad o clase distinta, con las siguientes columnas:\n" +
-            "\n" +
-            "* Subject: Título breve para la clase o actividad.\n" +
-            "* Description: Información detallada sobre la clase o actividad, en cuanto a lo que se va a hacer o cómo será.\n" +  
-            "* Start Date: La fecha y hora de inicio solo acepta formato OBLIGATORIO 'YYYY-MM-DDTHH:MM:SS'. Si no dice hora coloca ESTRICTAMENTE 00:00:00 sin suponer hora. El año es " + calendar.get(Calendar.YEAR) + " si no se indica lo contrario.\n" +
-            "* End Date: La fecha y hora de fin solo acepta formato OBLIGATORIO 'YYYY-MM-DDTHH:MM:SS'. Si no dice hora coloca ESTRICTAMENTE 23:59:59 sin suponer hora. El año es " + calendar.get(Calendar.YEAR) + " si no se indica lo contrario.\n"
-            )
+                parts,
+                Map.of("text", prompt)
             })
         });
 
@@ -73,7 +88,7 @@ public class GeminiServicio implements IAServicio {
         String jsonBody = mapper.writeValueAsString(requestBody);
 
         HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create("https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=" + geminiApiKey))
+                .uri(URI.create(URL_GEMINI + "?key=" + geminiApiKey))
                 .header("Content-Type", "application/json")
                 .POST(HttpRequest.BodyPublishers.ofString(jsonBody))
                 .build();
@@ -89,17 +104,31 @@ public class GeminiServicio implements IAServicio {
         // Segundo envío para reanalizar la imagen y el CSV extraído
 
         // Se envía el CSV extraído junto con la imagen para corregir errores de formato y duplicados
+        String promptCorreccion;
+        if (esPDF) {
+            promptCorreccion = "Usando el archivo PDF y el CSV generado a partir del texto extraído, realiza las siguientes correcciones:\n" +
+                "* Asegúrate de que Start Date y End Date usen el formato ESTRICTO 'YYYY-MM-DDTHH:MM:SS' y que no tenga texto colocado por error.\n" +
+                "* Si Start Date no incluye hora, coloca EXACTAMENTE 00:00:00.\n" +
+                "* Si End Date no incluye hora, coloca EXACTAMENTE 23:59:59.\n" +
+                "* El año es " + calendar.get(Calendar.YEAR) + " si no se menciona explícitamente otro.\n" +
+                "* Elimina duplicados, unificando filas similares cuando sea posible.\n" +
+                "\n" +
+                "CSV generado previamente:\n" +
+                csvExtraido;
+        } else {
+            promptCorreccion = "Usando la imagen y el CSV generado a partir del texto extraído, realiza las siguientes correcciones:\n" +
+                "* Asegúrate de que Start Date y End Date usen el formato ESTRICTO 'YYYY-MM-DDTHH:MM:SS' y que no tenga texto colocado por error.\n" +
+                "* Si Start Date no incluye hora, coloca EXACTAMENTE 00:00:00.\n" +
+                "* Si End Date no incluye hora, coloca EXACTAMENTE 23:59:59.\n" +
+                "* El año es " + calendar.get(Calendar.YEAR) + " si no se menciona explícitamente otro.\n" +
+                "* Elimina duplicados, unificando filas similares cuando sea posible.\n" +
+                "\n" +
+                "CSV generado previamente:\n" +
+                csvExtraido;
+        }
+
         Map<String, Object> csvParts = new HashMap<>();
-        csvParts.put("text",
-            "Empleando la imágen proporcionada y el CSV extraído, corrige los siguientes errores:\n" +
-            "* Asegúrate que Start Date y End Date tengan el formato OBLIGATORIO 'YYYY-MM-DDTHH:MM:SS'.\n" +
-            "* Si no se indica hora en Start Date, inserta ESTRICTAMENTE 00:00:00. Si no se indica hora en End Date, inserta ESTRICTAMENTE 23:59:59.\n" +
-            "* El año es " + calendar.get(Calendar.YEAR) + " si no se indica lo contrario.\n" +
-            "* Elimina las filas duplicadas en el CSV unificando las actividades o clases si es posible.\n" +
-            "\n" +
-            "El CSV extraído es:\n" +
-            csvExtraido
-        );
+        csvParts.put("text", promptCorreccion);
 
         Map<String, Object> reanalisisRequestBody = new HashMap<>();
         reanalisisRequestBody.put("contents", new Object[] {
@@ -112,7 +141,7 @@ public class GeminiServicio implements IAServicio {
         String reanalisisJsonBody = mapper.writeValueAsString(reanalisisRequestBody);
 
         HttpRequest reanalisisRequest = HttpRequest.newBuilder()
-                .uri(URI.create("https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=" + geminiApiKey))
+                .uri(URI.create(URL_GEMINI + "?key=" + geminiApiKey))
                 .header("Content-Type", "application/json")
                 .POST(HttpRequest.BodyPublishers.ofString(reanalisisJsonBody))
                 .build();
